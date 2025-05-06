@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt'; //Para criptografar senhas
 import { PrismaService } from 'src/prisma/prisma.service'; //Para ter acesso ao banco de dados
@@ -27,12 +27,12 @@ export class AuthService {
         });
 
         if (!user) {
-            throw new Error('Usuário não encontrado');
+            throw new UnauthorizedException('Usuário não encontrado.');
           }
       
           const isMatch = await bcrypt.compare(password, user.password);
           if (!isMatch) {
-            throw new Error('Senha incorreta');
+            throw new UnauthorizedException('Senha incorreta');
           }
       
           const payload = { email: user.email, sub: user.id };

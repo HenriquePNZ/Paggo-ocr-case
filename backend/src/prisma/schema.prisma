@@ -22,10 +22,12 @@ model User {
 
 model Document {
   id            String   @id @default(cuid())
-  userId        String
-  imageUrl      String
-  extractedText String?
+  filename      String
+  extractedText String
+  parsedJson    Json
   createdAt     DateTime @default(now())
+
+  userId        String
   user          User     @relation(fields: [userId], references: [id])
 }
 

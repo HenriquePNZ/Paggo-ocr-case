@@ -8,6 +8,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { ProtectedController } from './protected/protected.controller';
 import { DocumentsController } from './document.controller';
 import { DocumentsService } from './documents.service';
+import { InvoiceParserService } from '../invoice/invoice-parser.service';
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { DocumentsService } from './documents.service';
       inject: [ConfigService], 
     }),
   ],
-  providers: [AuthService, JwtStrategy, DocumentsService], 
+  providers: [AuthService, JwtStrategy, DocumentsService, InvoiceParserService], 
   controllers: [AuthController, ProtectedController, DocumentsController], 
 })
 export class AuthModule {}
