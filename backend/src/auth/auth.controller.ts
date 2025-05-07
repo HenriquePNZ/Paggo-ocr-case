@@ -11,7 +11,7 @@ export class AuthController {
   }
 
   @Post('login')
-  @HttpCode(HttpStatus.OK) // Adicione esta linha para definir o status como 200
+  @HttpCode(HttpStatus.OK)
   async login(@Body() body: any) {
     console.log('BODY RECEBIDO:', body);
     return this.authService.login(body.email, body.password);

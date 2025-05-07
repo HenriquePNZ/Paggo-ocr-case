@@ -70,18 +70,18 @@ export class DocumentsService {
         userId: user.userId,
       },
       select: {
-        id: true, // Selecionando o campo 'id' para ser retornado
+        id: true,
       }
     });
 
-    // Retorna a resposta com o documentId
+    //Retorna a resposta com o id do documento
     return {
       message: 'Arquivo recebido com sucesso!',
       filename: file.filename,
       uploadedBy: user,
       extractedText,
       parsed,
-      documentId: document.id, // Agora o documentId será corretamente retornado
+      documentId: document.id,
     };
   }
 }

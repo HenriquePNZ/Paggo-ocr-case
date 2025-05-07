@@ -1,0 +1,38 @@
+Nome do Arquivo Original: file-1746592566107-1853569.png
+
+-------------------- TEXTO EXTRAÍDO --------------------
+Invoice Number 10235 Metro Office Supplies
+Invoice Date March 15, 2025 789 Commerce Blvd.
+Due Date March 30, 2025 Los Angeles. CA 90017
+(555) 789-1254
+BILL TO billing@metro-office.com
+Greenfield Solutions
+4567 Park Lane, Suite 300
+Denver, CO 90203
+SHIP TO
+Greenfield Solutions
+4567 Park Lane, Suite 300
+Denver, CO 80203
+DESCRIPTION UNIT PRICE LINE TOTAL
+HP LaserJet Printer $599.00 $599.00
+Office Desk Chair $145.00 $145.00
+Wireless Keyboard $49.95
+oesowem | 5 | sum | sus]
+Copy Paper $6.99 $96.38
+Subtotal $1,091.35
+Sales Tax (9.5%) $92.76
+BALANCE DUE $1,184.11
+TERMS & CONDITIONS
+Payment is due within 15 days. THANK YOU
+FOR YOUR BUSINESS!
+
+
+-------------------- INTERAÇÕES COM GEMINI --------------------
+
+Pergunta 1: qual a marca da impressora?
+
+Resposta 1: Resposta: HP
+
+Explicação: Na descrição do item, aparece "HP LaserJet Printer", indicando que a marca da impressora é HP.
+
+

@@ -24,7 +24,7 @@ export class InvoiceParserService {
       client: this.matchAny([
         /bill\s*to[:\s]*(.+)/i,
       ], text),
-      products: this.extractProducts(text), // Apenas os produtos reais
+      products: this.extractProducts(text),
     };
   }
 
@@ -41,11 +41,11 @@ export class InvoiceParserService {
 
     const productLines = lines.filter(line =>
       /\$[\d,.]+/.test(line) &&
-      !/subtotal|sales\s*tax|balance\s*due|total/i.test(line) // 🧼 Exclui valores financeiros
+      !/subtotal|sales\s*tax|balance\s*due|total/i.test(line)
     );
 
     return productLines.map(line => {
-      const parts = line.trim().split(/\s(?=\$)/); // separa por espaço antes de $
+      const parts = line.trim().split(/\s(?=\$)/);
       return {
         description: parts[0]?.trim() || null,
         unitPrice: parts[1]?.trim() || null,

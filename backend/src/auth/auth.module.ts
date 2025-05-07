@@ -5,9 +5,8 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
-import { ProtectedController } from './protected/protected.controller';
-import { DocumentsController } from './document.controller';
-import { DocumentsService } from './documents.service';
+import { DocumentsController } from '../documents/document.controller';
+import { DocumentsService } from '../documents/documents.service';
 import { InvoiceParserService } from '../invoice/invoice-parser.service';
 
 @Module({
@@ -24,6 +23,6 @@ import { InvoiceParserService } from '../invoice/invoice-parser.service';
     }),
   ],
   providers: [AuthService, JwtStrategy, DocumentsService, InvoiceParserService], 
-  controllers: [AuthController, ProtectedController, DocumentsController], 
+  controllers: [AuthController, DocumentsController], 
 })
 export class AuthModule {}
