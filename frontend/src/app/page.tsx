@@ -1,9 +1,8 @@
-// frontend/src/app/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import styles from './page.module.css'; // Importe o arquivo de estilos
+import styles from './page.module.css';
 
 const HomePage = () => {
   const [email, setEmail] = useState('');
@@ -231,7 +230,7 @@ const HomePage = () => {
     try {
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob', // Important for handling binary data
+        responseType: 'blob',
       });
 
       const filename = response.headers['content-disposition']?.split('filename=')?.[1] || `document_${documentId}.txt`;
@@ -394,8 +393,8 @@ const HomePage = () => {
               value={selectedDocumentId === null ? undefined : selectedDocumentId}
               onChange={(e) => {
                 setSelectedDocumentId(e.target.value);
-                setConversationHistory([]); // Clear history when document changes
-                setAnswer(''); // Clear previous answer
+                setConversationHistory([]);
+                setAnswer('');
               }}
               className={styles.select}
             >

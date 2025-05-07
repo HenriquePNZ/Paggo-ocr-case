@@ -1,4 +1,3 @@
-/* frontend/src/app/page.module.css */
 .container {
     padding: 20px;
     max-width: 800px;
@@ -28,7 +27,7 @@
     margin-top: 10px;
   }
   
-  /* Estilos para a seção de autenticação (Login/Cadastro) */
+  /* Login/Cadastro */
   .authContainer {
     border: 1px solid #ccc;
     padding: 20px;
@@ -99,7 +98,7 @@
     color: #0056b3;
   }
   
-  /* Estilos para a seção principal após o login */
+  /* Seção depois do login*/
   .header {
     display: flex;
     justify-content: space-between;
@@ -130,31 +129,29 @@
     background-color: #c82333;
   }
   
-  /* Estilos para a seção de upload */
- /* ... outros estilos ... */
-
+  /* Upload */
 .uploadSection {
     margin-bottom: 20px;
     border: 1px solid #ccc;
     padding: 15px;
     border-radius: 5px;
-    display: flex; /* Usar flexbox para alinhar os itens */
-    flex-direction: column; /* Colocar os itens em coluna */
-    gap: 10px; /* Adicionar espaçamento entre os itens */
+    display: flex; 
+    flex-direction: column;
+    gap: 10px; 
   }
   
   .sectionTitle {
     color: #333;
     margin-top: 0;
-    margin-bottom: 0; /* Reduzir a margem abaixo do título */
+    margin-bottom: 0;
     font-size: 2.5 rem;
     font-weight: bold;
   }
   
   .fileInput {
     font-size: 16px;
-    padding: 8px; /* Adicionar um pouco de padding ao input */
-    border: 1px solid #ddd; /* Adicionar uma borda sutil */
+    padding: 8px; 
+    border: 1px solid #ddd; 
     border-radius: 4px;
     cursor: pointer;
   }
@@ -168,7 +165,7 @@
     border-radius: 4px;
     font-size: 16px;
     transition: background-color 0.3s ease;
-    align-self: flex-start; /* Alinhar o botão à esquerda */
+    align-self: flex-start;
   }
   
   .uploadButton:hover {
@@ -180,7 +177,7 @@
     cursor: not-allowed;
   }
   
-  /* Estilos para a seleção de documento */
+  /* Seleção de documento */
   .sectionSubtitle {
     color: #333;
     margin-top: 20px;
@@ -199,7 +196,7 @@
     box-sizing: border-box;
   }
   
-  /* Estilos para a seção de interação com o Gemini */
+  /* Gemini */
   .geminiSection {
     border: 1px solid #ccc;
     padding: 15px;
@@ -252,10 +249,10 @@
   
   .answerText {
     color: #555;
-    white-space: pre-wrap; /* Para preservar quebras de linha */
+    white-space: pre-wrap;
   }
   
-  /* Estilos para o histórico de conversa */
+  /* Histórico de conversa */
   .historyContainer {
     margin-top: 20px;
     padding-top: 15px;
@@ -281,7 +278,7 @@
     color: #333;
   }
   
-  /* Estilos para a seção de download */
+  /* Download */
   .downloadSection {
     border: 1px solid #ccc;
     padding: 15px;
@@ -310,7 +307,7 @@
     cursor: not-allowed;
   }
   
-  /* Estilo para a mensagem de carregamento */
+  /* Mensagem de carregamento */
   .loading {
     padding: 20px;
     text-align: center;

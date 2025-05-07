@@ -24,7 +24,7 @@ export class GeminiController {
     console.log('Texto Extraído (Query):', context);
     const initialExplanation = await this.geminiService.explainText(context);
 
-    // Fazendo a consulta ao Gemini com o contexto e a pergunta
+    //Consulta no Gemini com o contexto e a pergunta
     const answer = await this.geminiService.query(context, body.question);
 
     return { answer, initialExplanation };

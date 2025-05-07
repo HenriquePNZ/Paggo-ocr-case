@@ -43,7 +43,7 @@ export class DocumentsController {
   async downloadFileWithTextAndContext(
     @Param('documentId') documentId: string,
     @Res() res: Response,
-    @Query('queries') queries?: string, // Capture the queries parameter
+    @Query('queries') queries?: string, 
   ) {
     const document = await this.documentsService.getDocumentById(documentId);
 
@@ -61,7 +61,7 @@ export class DocumentsController {
         try {
             const conversationHistory: { question: string; answer: string }[] = JSON.parse(decodeURIComponent(queries));
             if (conversationHistory && conversationHistory.length > 0) {
-                filename = `${baseFilename}_com_interacoes.txt`; // Update filename to indicate interactions
+                filename = `${baseFilename}_com_interacoes.txt`;
                 fileContent += `-------------------- INTERAÇÕES COM GEMINI --------------------\n\n`;
                 conversationHistory.forEach((item, index) => {
                     fileContent += `Pergunta ${index + 1}: ${item.question}\n`;
@@ -69,9 +69,7 @@ export class DocumentsController {
                 });
             }
         } catch (e) {
-            console.error("Failed to parse conversation history from query:", e);
-            // Optionally, you could add a message to the file indicating the parse error
-            // fileContent += "Erro ao carregar histórico de interações.\n\n";
+            console.error("Falha:", e);
         }
     }
 
@@ -79,29 +77,6 @@ export class DocumentsController {
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', 'text/plain');
     res.send(fileContent);
-  }
-
-  @Get('original/:documentId')  // Baixar arquivo original (kept but not linked from frontend)
-  @UseGuards(JwtAuthGuard)
-  async downloadOriginalFile(@Param('documentId') documentId: string, @Res() res: Response) {
-    const document = await this.documentsService.getDocumentById(documentId);
-
-    if (!document) {
-      return res.status(404).send('Documento não encontrado!');
-    }
-
-    const filePath = `./uploads/${document.filename}`;
-    // Security check: Ensure the file is within the intended uploads directory
-    if (!filePath.startsWith('./uploads/')) {
-         return res.status(400).send('Invalid document path.');
-    }
-    // Check if file exists before attempting to download
-    const fs = require('fs');
-    if (!fs.existsSync(filePath)) {
-        return res.status(404).send('Original file not found.');
-    }
-
-    return res.download(filePath, document.filename);
   }
 
 }
