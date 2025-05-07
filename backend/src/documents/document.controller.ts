@@ -1,4 +1,3 @@
-// backend/src/documents/documents.controller.ts
 import { Controller, Post, Get, UploadedFile, UseInterceptors, UseGuards, Request, Param, Res, Query } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';

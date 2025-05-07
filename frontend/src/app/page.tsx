@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import styles from './page.module.css'; // Importe o arquivo de estilos
 
 const HomePage = () => {
   const [email, setEmail] = useState('');
@@ -267,31 +268,24 @@ const HomePage = () => {
   }, [isAuthenticated]);
 
   if (isLoadingAuth) {
-    return <div style={{ padding: '20px' }}>Verificando autenticação...</div>;
+    return <div className={styles.loading}>Verificando autenticação...</div>;
   }
 
   return (
-    <div style={{ padding: '20px', maxWidth: '800px', margin: 'auto' }}>
-      {error && <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>}
-      {successMessage && (
-        <p style={{ color: 'green', textAlign: 'center' }}>{successMessage}</p>
-      )}
-      {uploadError && <p style={{ color: 'red', marginTop: '10px' }}>{uploadError}</p>}
+    <div className={styles.container}>
+      {error && <p className={styles.error}>{error}</p>}
+      {successMessage && <p className={styles.success}>{successMessage}</p>}
+      {uploadError && <p className={styles.uploadError}>{uploadError}</p>}
       {uploadSuccessMessage && (
-        <p style={{ color: 'green', marginTop: '10px' }}>
-          {uploadSuccessMessage}
-        </p>
+        <p className={styles.uploadSuccess}>{uploadSuccessMessage}</p>
       )}
 
       {!isAuthenticated ? (
-        <div>
-          <h1>{isSignUp ? 'Cadastro' : 'Login'}</h1>
+        <div className={styles.authContainer}>
+          <h1 className={styles.authTitle}>{isSignUp ? 'Cadastro' : 'Login'}</h1>
           <form onSubmit={isSignUp ? handleSignUp : handleLogin}>
-            <div style={{ marginBottom: '10px' }}>
-              <label
-                htmlFor="email"
-                style={{ display: 'block', marginBottom: '5px' }}
-              >
+            <div className={styles.formGroup}>
+              <label htmlFor="email" className={styles.label}>
                 Email:
               </label>
               <input
@@ -300,18 +294,11 @@ const HomePage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  boxSizing: 'border-box',
-                }}
+                className={styles.input}
               />
             </div>
-            <div style={{ marginBottom: '10px' }}>
-              <label
-                htmlFor="password"
-                style={{ display: 'block', marginBottom: '5px' }}
-              >
+            <div className={styles.formGroup}>
+              <label htmlFor="password" className={styles.label}>
                 Senha:
               </label>
               <input
@@ -320,19 +307,12 @@ const HomePage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  boxSizing: 'border-box',
-                }}
+                className={styles.input}
               />
             </div>
             {isSignUp && (
-              <div style={{ marginBottom: '15px' }}>
-                <label
-                  htmlFor="confirmPassword"
-                  style={{ display: 'block', marginBottom: '5px' }}
-                >
+              <div className={styles.formGroup}>
+                <label htmlFor="confirmPassword" className={styles.label}>
                   Confirmar Senha:
                 </label>
                 <input
@@ -341,30 +321,15 @@ const HomePage = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    boxSizing: 'border-box',
-                  }}
+                  className={styles.input}
                 />
               </div>
             )}
-            <button
-              type="submit"
-              style={{
-                width: '100%',
-                padding: '10px',
-                backgroundColor: '#007bff',
-                color: 'white',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '16px',
-              }}
-            >
+            <button type="submit" className={styles.authButton}>
               {isSignUp ? 'Cadastrar' : 'Login'}
             </button>
           </form>
-          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+          <div className={styles.authSwitch}>
             {isSignUp ? (
               <p>
                 Já tem uma conta?{' '}
@@ -373,13 +338,7 @@ const HomePage = () => {
                     setIsSignUp(false);
                     clearMessages();
                   }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#007bff',
-                    cursor: 'pointer',
-                    textDecoration: 'underline',
-                  }}
+                  className={styles.switchButton}
                 >
                   Faça login
                 </button>
@@ -392,13 +351,7 @@ const HomePage = () => {
                     setIsSignUp(true);
                     clearMessages();
                   }}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#007bff',
-                    cursor: 'pointer',
-                    textDecoration: 'underline',
-                  }}
+                  className={styles.switchButton}
                 >
                   Cadastre-se
                 </button>
@@ -408,58 +361,34 @@ const HomePage = () => {
         </div>
       ) : (
         <div>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '20px',
-            }}
-          >
-            <h1>Meus Documentos</h1>
-            <button
-              onClick={handleLogout}
-              style={{ padding: '8px 15px', cursor: 'pointer' }}
-            >
+          <div className={styles.header}>
+            <h1 className={styles.title}>Meus Documentos</h1>
+            <button onClick={handleLogout} className={styles.logoutButton}>
               Sair
             </button>
           </div>
 
           {/* Seção de Upload */}
-          <div
-            style={{
-              marginBottom: '20px',
-              border: '1px solid #ccc',
-              padding: '15px',
-              borderRadius: '5px',
-            }}
-          >
-            <h3>Upload de Novo Documento</h3>
+          <div className={styles.uploadSection}>
+            <h3 className={styles.sectionTitle}>Upload de Novo Documento</h3>
             <input
               type="file"
               onChange={handleFileChange}
-              style={{ marginBottom: '10px' }}
+              className={styles.fileInput}
             />
             <button
               onClick={handleFileUpload}
               disabled={isUploading}
-              style={{
-                padding: '8px 15px',
-                cursor: 'pointer',
-                backgroundColor: '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-              }}
+              className={styles.uploadButton}
             >
               {isUploading ? 'Enviando...' : 'Enviar Arquivo'}
             </button>
           </div>
 
           {/* Lista de Documentos */}
-          <h2>Selecione um Documento</h2>
+          <h2 className={styles.sectionSubtitle}>Selecione um Documento</h2>
           {isLoadingDocs ? (
-            <p>Carregando documentos...</p>
+            <p className={styles.loading}>Carregando documentos...</p>
           ) : (
             <select
               value={selectedDocumentId === null ? undefined : selectedDocumentId}
@@ -468,13 +397,7 @@ const HomePage = () => {
                 setConversationHistory([]); // Clear history when document changes
                 setAnswer(''); // Clear previous answer
               }}
-              style={{
-                width: '100%',
-                padding: '10px',
-                marginBottom: '20px',
-                border: '1px solid #ccc',
-                borderRadius: '5px',
-              }}
+              className={styles.select}
             >
               <option value="">Selecione um documento</option>
               {documents.map((document: any) => (
@@ -487,93 +410,52 @@ const HomePage = () => {
 
           {/* Área de Pergunta ao Gemini */}
           {selectedDocumentId && (
-            <div
-              style={{
-                border: '1px solid #ccc',
-                padding: '15px',
-                borderRadius: '5px',
-                marginBottom: '20px',
-              }}
-            >
-              <h3>Perguntar ao Gemini</h3>
+            <div className={styles.geminiSection}>
+              <h3 className={styles.sectionTitle}>Perguntar ao Gemini</h3>
               <textarea
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="Digite sua pergunta sobre o documento selecionado"
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  marginBottom: '10px',
-                  border: '1px solid #ccc',
-                  borderRadius: '5px',
-                  minHeight: '100px',
-                }}
+                className={styles.textarea}
               />
               <button
                 onClick={handleAskGemini}
                 disabled={isAskingQuestion}
-                style={{
-                  padding: '10px 15px',
-                  cursor: 'pointer',
-                  backgroundColor: '#007bff',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                }}
+                className={styles.askButton}
               >
                 {isAskingQuestion ? 'Perguntando...' : 'Perguntar'}
               </button>
 
               {answer && (
-                <div
-                  style={{
-                    marginTop: '20px',
-                    borderTop: '1px solid #eee',
-                    paddingTop: '15px',
-                  }}
-                >
-                  <h4>Resposta do Gemini:</h4>
-                  <p>{answer}</p>
+                <div className={styles.answerContainer}>
+                  <h4 className={styles.answerTitle}>Resposta do Gemini:</h4>
+                  <p className={styles.answerText}>{answer}</p>
                 </div>
               )}
 
-               {/* Histórico de Conversa */}
-               {conversationHistory.length > 0 && (
-                <div style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
-                    <h4>Histórico de Interações:</h4>
-                    {conversationHistory.map((item, index) => (
-                        <div key={index} style={{ marginBottom: '10px', padding: '10px', border: '1px solid #eee', borderRadius: '4px' }}>
-                            <p><strong>Você:</strong> {item.question}</p>
-                            <p><strong>Gemini:</strong> {item.answer}</p>
-                        </div>
-                    ))}
+              {/* Histórico de Conversa */}
+              {conversationHistory.length > 0 && (
+                <div className={styles.historyContainer}>
+                  <h4 className={styles.historyTitle}>Histórico de Interações:</h4>
+                  {conversationHistory.map((item, index) => (
+                    <div key={index} className={styles.historyItem}>
+                      <p><strong>Você:</strong> {item.question}</p>
+                      <p><strong>Gemini:</strong> {item.answer}</p>
+                    </div>
+                  ))}
                 </div>
-            )}
+              )}
             </div>
           )}
 
           {/* Área de Download */}
           {selectedDocumentId && (
-            <div
-              style={{
-                border: '1px solid #ccc',
-                padding: '15px',
-                borderRadius: '5px',
-              }}
-            >
-              <h3>Baixar Documento</h3>
+            <div className={styles.downloadSection}>
+              <h3 className={styles.sectionTitle}>Baixar Documento</h3>
               <button
                 onClick={() => downloadDocumentWithContext(selectedDocumentId)}
                 disabled={!selectedDocumentId}
-                style={{
-                  marginRight: '10px',
-                  padding: '10px 15px',
-                  cursor: 'pointer',
-                  backgroundColor: '#17a2b8',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                }}
+                className={styles.downloadButton}
               >
                 Baixar Documento (Texto {conversationHistory.length > 0 ? '+ Interações' : ''})
               </button>

@@ -1,0 +1,318 @@
+/* frontend/src/app/page.module.css */
+.container {
+    padding: 20px;
+    max-width: 800px;
+    margin: auto;
+    font-family: sans-serif;
+  }
+  
+  .error {
+    color: red;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  
+  .success {
+    color: green;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  
+  .uploadError {
+    color: red;
+    margin-top: 10px;
+  }
+  
+  .uploadSuccess {
+    color: green;
+    margin-top: 10px;
+  }
+  
+  /* Estilos para a seção de autenticação (Login/Cadastro) */
+  .authContainer {
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+  
+  .authTitle {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 2.5 rem;
+    font-weight: bold;
+  }
+  
+  .formGroup {
+    margin-bottom: 15px;
+  }
+  
+  .label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+  }
+  
+  .input {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+  
+  .authButton {
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .authButton:hover {
+    background-color: #0056b3;
+  }
+  
+  .authSwitch {
+    margin-top: 20px;
+    text-align: center;
+    color: #777;
+  }
+  
+  .switchButton {
+    background: none;
+    border: none;
+    color: #007bff;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: inherit;
+  }
+  
+  .switchButton:hover {
+    color: #0056b3;
+  }
+  
+  /* Estilos para a seção principal após o login */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .title {
+    color: #333;
+    font-size: 2.5 rem;
+    font-weight: bold;
+  }
+  
+  .logoutButton {
+    padding: 10px 15px;
+    cursor: pointer;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .logoutButton:hover {
+    background-color: #c82333;
+  }
+  
+  /* Estilos para a seção de upload */
+ /* ... outros estilos ... */
+
+.uploadSection {
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 5px;
+    display: flex; /* Usar flexbox para alinhar os itens */
+    flex-direction: column; /* Colocar os itens em coluna */
+    gap: 10px; /* Adicionar espaçamento entre os itens */
+  }
+  
+  .sectionTitle {
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 0; /* Reduzir a margem abaixo do título */
+    font-size: 2.5 rem;
+    font-weight: bold;
+  }
+  
+  .fileInput {
+    font-size: 16px;
+    padding: 8px; /* Adicionar um pouco de padding ao input */
+    border: 1px solid #ddd; /* Adicionar uma borda sutil */
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .uploadButton {
+    padding: 10px 15px;
+    cursor: pointer;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    align-self: flex-start; /* Alinhar o botão à esquerda */
+  }
+  
+  .uploadButton:hover {
+    background-color: #1e7e34;
+  }
+  
+  .uploadButton:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+  }
+  
+  /* Estilos para a seleção de documento */
+  .sectionSubtitle {
+    color: #333;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-size: 2.5 rem;
+    font-weight: bold;
+  }
+  
+  .select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    box-sizing: border-box;
+  }
+  
+  /* Estilos para a seção de interação com o Gemini */
+  .geminiSection {
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+  
+  .textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    box-sizing: border-box;
+    min-height: 100px;
+  }
+  
+  .askButton {
+    padding: 10px 15px;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .askButton:hover {
+    background-color: #0056b3;
+  }
+  
+  .askButton:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+  }
+  
+  .answerContainer {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+  }
+  
+  .answerTitle {
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 5px;
+  }
+  
+  .answerText {
+    color: #555;
+    white-space: pre-wrap; /* Para preservar quebras de linha */
+  }
+  
+  /* Estilos para o histórico de conversa */
+  .historyContainer {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+  }
+  
+  .historyTitle {
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+  
+  .historyItem {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+  }
+  
+  .historyItem strong {
+    font-weight: bold;
+    color: #333;
+  }
+  
+  /* Estilos para a seção de download */
+  .downloadSection {
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 5px;
+    margin-top: 20px;
+  }
+  
+  .downloadButton {
+    margin-right: 10px;
+    padding: 10px 15px;
+    cursor: pointer;
+    background-color: #17a2b8;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .downloadButton:hover {
+    background-color: #138496;
+  }
+  
+  .downloadButton:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+  }
+  
+  /* Estilo para a mensagem de carregamento */
+  .loading {
+    padding: 20px;
+    text-align: center;
+    color: #777;
+  }
