@@ -1,60 +1,110 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback } from 'react';
+import axios, { AxiosError } from 'axios';
 import styles from './page.module.css';
 
+// --- Interfaces para Tipagem ---
+interface Document {
+  id: string;
+  filename: string;
+  originalFilename?: string | null;
+  extractedText?: string;
+  parsedJson?: { [key: string]: unknown } | null;
+}
+
+interface Conversation {
+  question: string;
+  answer: string;
+}
+
+interface AuthResponse {
+  access_token?: string;
+  message?: string;
+}
+
+interface RegisterResponse {
+  message?: string;
+}
+
+interface DocumentUploadResponse {
+  message?: string;
+  documentId?: string;
+  originalFilename?: string | null;
+}
+
+interface GeminiResponse {
+  answer: string;
+  message?: string;
+}
+
+interface DownloadErrorResponse {
+  message?: string;
+}
+
 const HomePage = () => {
+  // --- Estados de Autenticação ---
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
-
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [documents, setDocuments] = useState<any[]>([]);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-  const [isLoadingDocs, setIsLoadingDocs] = useState(false);
 
-  // Estados para o Upload
+  // --- Estados de Documentos ---
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [isLoadingDocs, setIsLoadingDocs] = useState(false);
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+
+  // --- Estados de Upload ---
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadError, setUploadError] = useState('');
-  const [uploadSuccessMessage, setUploadSuccessMessage] = useState('');
 
-  //Estados para interação com o documento selecionado e o Gemini
-  const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+  // --- Estados de Interação com Gemini ---
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [isAskingQuestion, setIsAskingQuestion] = useState(false);
-  const [conversationHistory, setConversationHistory] = useState<
-    { question: string; answer: string }[]
-  >([]);
+  const [conversationHistory, setConversationHistory] = useState<Conversation[]>([]);
 
-  const clearMessages = () => {
-    setError('');
-    setSuccessMessage('');
-    setUploadError('');
-    setUploadSuccessMessage('');
-  };
+  // --- Estados de Mensagens e Feedback ---
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccessMessage, setUploadSuccessMessage] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
+
+  // Limpa todas as mensagens de feedback
+  const clearMessages = useCallback(() => {
+    setError(null);
+    setSuccessMessage(null);
+    setUploadError(null);
+    setUploadSuccessMessage(null);
+  }, []);
+
+  // --- Funções de Autenticação ---
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     clearMessages();
     try {
-      const response = await axios.post('http://localhost:3000/auth/login', {
+      const response = await axios.post<AuthResponse>('http://localhost:3000/auth/login', {
         email,
         password,
       });
       if (response.status === 200 && response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
         setIsAuthenticated(true);
+        setSuccessMessage('Login realizado com sucesso!');
       } else {
-        setError(response.data.message || 'Falha ao fazer login.');
+        setError(response.data?.message || 'Falha ao fazer login.');
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Email ou senha incorretos.');
+    } catch (error: unknown) {
+      if (axios.isAxiosError<AuthResponse>(error)) {
+           setError(error.response?.data?.message || error.message || 'Email ou senha incorretos.');
+      } else {
+           setError('Ocorreu um erro desconhecido durante o login.');
+           console.error('Erro inesperado durante o login:', error);
+      }
     }
   };
 
@@ -66,7 +116,7 @@ const HomePage = () => {
       return;
     }
     try {
-      const response = await axios.post('http://localhost:3000/auth/register', {
+      const response = await axios.post<RegisterResponse>('http://localhost:3000/auth/register', {
         email,
         password,
       });
@@ -77,28 +127,95 @@ const HomePage = () => {
         setPassword('');
         setConfirmPassword('');
       } else {
-        setError(response.data.message || 'Erro ao cadastrar.');
+        setError(response.data?.message || 'Erro ao cadastrar.');
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao cadastrar. Tente novamente.');
+    } catch (error: unknown) {
+      if (axios.isAxiosError<RegisterResponse>(error)) {
+           setError(error.response?.data?.message || error.message || 'Erro ao cadastrar. Tente novamente.');
+      } else {
+           setError('Ocorreu um erro desconhecido durante o cadastro.');
+           console.error('Erro inesperado durante o cadastro:', error);
+      }
     }
   };
 
+  const handleLogout = () => {
+    clearMessages();
+    localStorage.removeItem('token');
+    setIsAuthenticated(false);
+    // Limpa todos os estados relacionados ao usuário e documentos ao sair
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setSelectedDocumentId(null);
+    setDocuments([]);
+    setQuestion('');
+    setAnswer('');
+    setConversationHistory([]);
+    setIsUploading(false);
+    setIsAskingQuestion(false);
+    setIsDownloading(false);
+    setSuccessMessage('Você saiu da sua conta.');
+  };
+
+  // --- Funções de Documentos ---
+  const fetchDocuments = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setIsAuthenticated(false);
+      return;
+    }
+
+    setIsLoadingDocs(true);
+    clearMessages();
+    try {
+      const response = await axios.get<Document[]>('http://localhost:3000/documents', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setDocuments(response.data);
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+           // Se for erro 401, a sessão expirou
+           if (error.response?.status === 401) {
+             localStorage.removeItem('token');
+             setIsAuthenticated(false);
+             setError('Sessão expirada. Faça login novamente.');
+           } else {
+             if (!uploadError) {
+                 const backendErrorMessage = (error.response?.data as { message?: string })?.message || error.message;
+                 setError(`Erro ao buscar documentos: ${backendErrorMessage}`);
+             }
+           }
+      } else {
+           setError('Ocorreu um erro desconhecido ao buscar documentos.');
+           console.error('Erro inesperado ao buscar documentos:', error);
+      }
+      setDocuments([]);
+    } finally {
+      setIsLoadingDocs(false);
+    }
+  }, [clearMessages, uploadError]);
+
+  // --- Funções de Upload ---
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       setSelectedFile(event.target.files[0]);
+      setUploadError(null); 
+      setUploadSuccessMessage(null);
+    } else {
+        setSelectedFile(null); 
     }
   };
 
   const handleFileUpload = async () => {
     if (!selectedFile) {
-      setUploadError('Por favor, selecione um arquivo.');
+      setUploadError('Por favor, selecione um arquivo para enviar.');
       return;
     }
 
     setIsUploading(true);
-    setUploadError('');
-    setUploadSuccessMessage('');
+    setUploadError(null);
+    setUploadSuccessMessage(null);
 
     try {
       const formData = new FormData();
@@ -110,7 +227,7 @@ const HomePage = () => {
         return;
       }
 
-      const response = await axios.post('http://localhost:3000/documents/upload', formData, {
+      const response = await axios.post<DocumentUploadResponse>('http://localhost:3000/documents/upload', formData, { 
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`,
@@ -118,54 +235,36 @@ const HomePage = () => {
       });
 
       if (response.status === 201) {
-        setUploadSuccessMessage('Arquivo enviado com sucesso!');
+        setUploadSuccessMessage('Arquivo enviado e processado com sucesso!');
         setSelectedFile(null);
-        fetchDocuments();
+        fetchDocuments(); 
       } else {
-        setUploadError(response.data.message || 'Erro ao enviar o arquivo.');
+        
+        setUploadError(response.data?.message || 'Erro desconhecido ao enviar o arquivo.');
       }
-    } catch (err: any) {
-      setUploadError(err.response?.data?.message || 'Erro ao enviar o arquivo.');
+    } catch (error: unknown) { 
+       console.error("Erro durante o upload:", error);
+       if (axios.isAxiosError<DocumentUploadResponse>(error)) {
+          
+           const backendErrorMessage = error.response?.data?.message || error.message;
+           setUploadError(`Erro no upload: ${backendErrorMessage}`);
+       } else {
+           setUploadError('Ocorreu um erro desconhecido durante o upload.');
+           console.error('Erro inesperado durante o upload:', error);
+       }
     } finally {
       setIsUploading(false);
     }
   };
 
-  const fetchDocuments = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setIsAuthenticated(false);
-      return;
-    }
-
-    setIsLoadingDocs(true);
-    clearMessages();
-    try {
-      const response = await axios.get('http://localhost:3000/documents', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setDocuments(response.data);
-    } catch (err: any) {
-      if (err.response?.status === 401) {
-        localStorage.removeItem('token');
-        setIsAuthenticated(false);
-        setError('Sessão expirada. Faça login novamente.');
-      } else {
-        if (!uploadError) setError('Erro ao buscar documentos.');
-      }
-      setDocuments([]);
-    } finally {
-      setIsLoadingDocs(false);
-    }
-  };
-
+  // --- Funções de Interação com Gemini ---
   const handleAskGemini = async () => {
     if (!selectedDocumentId) {
-      setError('Por favor, selecione um documento.');
+      setError('Por favor, selecione um documento para perguntar.');
       return;
     }
     if (!question.trim()) {
-      setError('Por favor, digite sua pergunta.');
+      setError('Por favor, digite sua pergunta antes de enviar.');
       return;
     }
 
@@ -179,78 +278,110 @@ const HomePage = () => {
         return;
       }
 
-      const response = await axios.post(
-        `http://localhost:3000/documents/llm/query/${selectedDocumentId}`,
+     
+      const response = await axios.post<GeminiResponse>(
+        `http://localhost:3000/documents/llm/query/${selectedDocumentId}`, 
         { question },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setAnswer(response.data.answer);
+     
+      const geminiAnswer = response.data.answer;
+      setAnswer(geminiAnswer); 
+
+    
       setConversationHistory([
         ...conversationHistory,
-        { question, answer: response.data.answer },
+        { question: question, answer: geminiAnswer },
       ]);
-      setQuestion('');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao perguntar ao Gemini.');
-      setAnswer('');
+      setQuestion(''); 
+      setSuccessMessage('Resposta do Gemini recebida.');
+    } catch (error: unknown) {
+       console.error("Erro ao perguntar ao Gemini:", error);
+       if (axios.isAxiosError<GeminiResponse>(error)) {
+           const backendErrorMessage = error.response?.data?.message || error.message;
+           setError(`Erro ao perguntar ao Gemini: ${backendErrorMessage}`);
+           setAnswer(''); 
+       } else {
+           setError('Ocorreu um erro desconhecido ao perguntar ao Gemini.');
+           console.error('Erro inesperado ao perguntar ao Gemini:', error);
+           setAnswer(''); 
+       }
     } finally {
       setIsAskingQuestion(false);
     }
   };
 
-  const handleLogout = () => {
-    clearMessages();
-    localStorage.removeItem('token');
-    setIsAuthenticated(false);
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-    setSelectedDocumentId(null);
-    setQuestion('');
-    setAnswer('');
-    setConversationHistory([]);
-  };
+  const handleDownload = async () => {
+      if (!selectedDocumentId) {
+          setError('Por favor, selecione um documento para baixar.');
+          return;
+      }
 
-  const downloadDocumentWithContext = async (documentId: string) => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setError('Sessão expirada. Faça login novamente.');
-      setIsAuthenticated(false);
-      return;
-    }
+      setIsDownloading(true);
+      clearMessages();
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Sessão expirada. Faça login novamente.');
+        setIsAuthenticated(false);
+        setIsDownloading(false);
+        return;
+      }
 
-    let url = `http://localhost:3000/documents/download/${documentId}`;
-    if (conversationHistory.length > 0) {
-      const queries = encodeURIComponent(JSON.stringify(conversationHistory));
-      url += `?queries=${queries}`;
-    }
+      let url = `http://localhost:3000/documents/download/${selectedDocumentId}`;
 
-    try {
-      const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob',
-      });
+      if (conversationHistory.length > 0) {
+          const queries = encodeURIComponent(JSON.stringify(conversationHistory));
+          url += `?queries=${queries}`;
+      }
 
-      const filename = response.headers['content-disposition']?.split('filename=')?.[1] || `document_${documentId}.txt`;
-      const urlCreator = window.URL || window.webkitURL;
-      const fileURL = urlCreator.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = fileURL;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(fileURL);
+      try {
+ 
+          const response = await axios.get<string>(url, { 
+              headers: { Authorization: `Bearer ${token}` },
+              responseType: 'text', 
+          });
 
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Erro ao baixar o documento.');
-    }
+          const textContent = response.data; 
+
+          const selectedDoc = documents.find(doc => doc.id === selectedDocumentId);
+          const baseFilename = selectedDoc?.originalFilename?.replace(/\s/g, '_').replace(/[^\w.-]/g, '').split('.').slice(0, -1).join('.') || `document_${selectedDocumentId}`;
+          const filename = `${baseFilename}_texto_interacoes.txt`;
+
+          const blob = new Blob([textContent], { type: 'text/plain' });
+
+          const urlCreator = window.URL || window.webkitURL;
+          const fileURL = urlCreator.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = fileURL;
+          link.download = filename; 
+          document.body.appendChild(link);
+          link.click(); 
+          document.body.removeChild(link); 
+          window.URL.revokeObjectURL(fileURL);
+
+          setSuccessMessage('Arquivo de texto baixado com sucesso!');
+
+      } catch (error: unknown) { 
+          console.error("Erro no download do arquivo de texto:", error);
+           if (axios.isAxiosError<DownloadErrorResponse | string>(error)) {
+    
+               const backendErrorMessage = (error.response?.data as DownloadErrorResponse)?.message || error.message;
+               setError(backendErrorMessage || 'Erro ao baixar o arquivo de texto.');
+           } else {
+
+               setError('Ocorreu um erro desconhecido ao baixar o arquivo de texto.');
+               console.error('Erro inesperado durante o download:', error);
+           }
+      } finally {
+          setIsDownloading(false); 
+      }
   };
 
 
   useEffect(() => {
+    // Verifica a autenticação inicial ao carregar a página
     const token = localStorage.getItem('token');
     if (token) {
       setIsAuthenticated(true);
@@ -259,19 +390,26 @@ const HomePage = () => {
   }, []);
 
   useEffect(() => {
+
     if (isAuthenticated) {
       fetchDocuments();
     } else {
-      setDocuments([]);
-    }
-  }, [isAuthenticated]);
 
+      setDocuments([]);
+      setSelectedDocumentId(null);
+      setConversationHistory([]);
+      setAnswer('');
+    }
+  }, [isAuthenticated, fetchDocuments]);
+  
+  // Exibe estado de carregamento inicial da autenticação
   if (isLoadingAuth) {
     return <div className={styles.loading}>Verificando autenticação...</div>;
   }
 
   return (
     <div className={styles.container}>
+      {/* Área de Mensagens de Feedback */}
       {error && <p className={styles.error}>{error}</p>}
       {successMessage && <p className={styles.success}>{successMessage}</p>}
       {uploadError && <p className={styles.uploadError}>{uploadError}</p>}
@@ -279,9 +417,10 @@ const HomePage = () => {
         <p className={styles.uploadSuccess}>{uploadSuccessMessage}</p>
       )}
 
+      {/* Formulário de Login/Cadastro */}
       {!isAuthenticated ? (
         <div className={styles.authContainer}>
-          <h1 className={styles.authTitle}>{isSignUp ? 'Cadastro' : 'Login'}</h1>
+          <h1 className={styles.authTitle}>{isSignUp ? 'Criar Conta' : 'Login'}</h1>
           <form onSubmit={isSignUp ? handleSignUp : handleLogin}>
             <div className={styles.formGroup}>
               <label htmlFor="email" className={styles.label}>
@@ -325,7 +464,7 @@ const HomePage = () => {
               </div>
             )}
             <button type="submit" className={styles.authButton}>
-              {isSignUp ? 'Cadastrar' : 'Login'}
+              {isSignUp ? 'Cadastrar' : 'Entrar'}
             </button>
           </form>
           <div className={styles.authSwitch}>
@@ -333,10 +472,7 @@ const HomePage = () => {
               <p>
                 Já tem uma conta?{' '}
                 <button
-                  onClick={() => {
-                    setIsSignUp(false);
-                    clearMessages();
-                  }}
+                  onClick={() => { setIsSignUp(false); clearMessages(); }}
                   className={styles.switchButton}
                 >
                   Faça login
@@ -346,10 +482,7 @@ const HomePage = () => {
               <p>
                 Não tem uma conta?{' '}
                 <button
-                  onClick={() => {
-                    setIsSignUp(true);
-                    clearMessages();
-                  }}
+                  onClick={() => { setIsSignUp(true); clearMessages(); }}
                   className={styles.switchButton}
                 >
                   Cadastre-se
@@ -359,6 +492,7 @@ const HomePage = () => {
           </div>
         </div>
       ) : (
+        /* Área Autenticada */
         <div>
           <div className={styles.header}>
             <h1 className={styles.title}>Meus Documentos</h1>
@@ -372,91 +506,111 @@ const HomePage = () => {
             <h3 className={styles.sectionTitle}>Upload de Novo Documento</h3>
             <input
               type="file"
+               accept="image/*,application/pdf" //arquivos de imagem ou PDF
               onChange={handleFileChange}
               className={styles.fileInput}
             />
+             {selectedFile && (
+                <p className={styles.selectedFileInfo}>
+                    Arquivo selecionado: <strong>{selectedFile.name}</strong> ({Math.round(selectedFile.size / 1024)} KB)
+                </p>
+            )}
             <button
               onClick={handleFileUpload}
-              disabled={isUploading}
-              className={styles.uploadButton}
+              disabled={isUploading || !selectedFile} 
             >
               {isUploading ? 'Enviando...' : 'Enviar Arquivo'}
             </button>
           </div>
 
           {/* Lista de Documentos */}
-          <h2 className={styles.sectionSubtitle}>Selecione um Documento</h2>
-          {isLoadingDocs ? (
-            <p className={styles.loading}>Carregando documentos...</p>
-          ) : (
-            <select
-              value={selectedDocumentId === null ? undefined : selectedDocumentId}
-              onChange={(e) => {
-                setSelectedDocumentId(e.target.value);
-                setConversationHistory([]);
-                setAnswer('');
-              }}
-              className={styles.select}
-            >
-              <option value="">Selecione um documento</option>
-              {documents.map((document: any) => (
-                <option key={document.id} value={document.id}>
-                  {document.filename}
-                </option>
-              ))}
-            </select>
-          )}
+          <div className={styles.documentListSection}>
+             <h2 className={styles.sectionSubtitle}>Selecione um Documento</h2>
+             {isLoadingDocs ? (
+                 <p className={styles.loading}>Carregando documentos...</p>
+             ) : documents.length === 0 ? (
+                 <p className={styles.noDocuments}>Nenhum documento encontrado. Faça upload de um novo documento para começar.</p>
+             ) : (
+                 <select
+                     value={selectedDocumentId === null ? "" : selectedDocumentId}
+                     onChange={(e) => {
+                         setSelectedDocumentId(e.target.value === "" ? null : e.target.value);
+                         setConversationHistory([]); 
+                         setAnswer('');
+                         clearMessages();
+                     }}
+                     className={styles.select}
+                 >
+                     <option value="">-- Selecione um documento --</option>
+                     {documents.map((document) => (
+                         <option key={document.id} value={document.id}>
+                             {document.originalFilename || document.filename || `Documento sem nome (${document.id})`} {/* Mostra nome original se disponível */}
+                         </option>
+                     ))}
+                 </select>
+             )}
+          </div>
 
-          {/* Área de Pergunta ao Gemini */}
+
+          {/* Área de Interação com o Documento (Pergunta ao Gemini e Histórico) */}
           {selectedDocumentId && (
             <div className={styles.geminiSection}>
-              <h3 className={styles.sectionTitle}>Perguntar ao Gemini</h3>
-              <textarea
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                placeholder="Digite sua pergunta sobre o documento selecionado"
-                className={styles.textarea}
-              />
-              <button
-                onClick={handleAskGemini}
-                disabled={isAskingQuestion}
-                className={styles.askButton}
-              >
-                {isAskingQuestion ? 'Perguntando...' : 'Perguntar'}
-              </button>
+              <h3 className={styles.sectionTitle}>Interação com o Documento Selecionado</h3>
 
+              {/* Pergunta ao Gemini */}
+              <div className={styles.geminiQuestionArea}>
+                <h4 className={styles.geminiSubtitle}>Perguntar ao Gemini:</h4>
+                <textarea
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  placeholder="Digite sua pergunta sobre o conteúdo do documento selecionado..."
+                  className={styles.textarea}
+                />
+                <button
+                  onClick={handleAskGemini}
+                  disabled={isAskingQuestion || !question.trim() || !selectedDocumentId} 
+                  className={styles.askButton}
+                >
+                  {isAskingQuestion ? 'Enviando pergunta...' : 'Perguntar ao Gemini'}
+                </button>
+              </div>
+
+              {/* Resposta mais recente do Gemini */}
               {answer && (
-                <div className={styles.answerContainer}>
-                  <h4 className={styles.answerTitle}>Resposta do Gemini:</h4>
+                <div className={styles.geminiAnswerArea}>
+                  <h4 className={styles.geminiSubtitle}>Resposta do Gemini:</h4>
                   <p className={styles.answerText}>{answer}</p>
                 </div>
               )}
 
-              {/* Histórico de Conversa */}
-              {conversationHistory.length > 0 && (
-                <div className={styles.historyContainer}>
-                  <h4 className={styles.historyTitle}>Histórico de Interações:</h4>
-                  {conversationHistory.map((item, index) => (
-                    <div key={index} className={styles.historyItem}>
-                      <p><strong>Você:</strong> {item.question}</p>
-                      <p><strong>Gemini:</strong> {item.answer}</p>
+               {/* Histórico de Conversa Completo */}
+               {conversationHistory.length > 0 && (
+                <div className={styles.geminiHistoryArea}>
+                    <h4 className={styles.geminiSubtitle}>Histórico de Interações:</h4>
+                    <div className={styles.historyList}> {/* Scrollbar para histórico longo */}
+                        {conversationHistory.map((item, index) => (
+                            <div key={index} className={styles.historyItem}>
+                                <p className={styles.historyQuestion}><strong>Você:</strong> {item.question}</p>
+                                <p className={styles.historyAnswer}><strong>Gemini:</strong> {item.answer}</p>
+                            </div>
+                        ))}
                     </div>
-                  ))}
                 </div>
-              )}
+            )}
             </div>
           )}
 
-          {/* Área de Download */}
+          {/* Área de Download TXT */}
           {selectedDocumentId && (
             <div className={styles.downloadSection}>
-              <h3 className={styles.sectionTitle}>Baixar Documento</h3>
+              <h3 className={styles.sectionTitle}>Baixar Texto e Interações</h3>
+              <p className={styles.downloadDescription}>Baixa um arquivo de texto (.txt) contendo o conteúdo extraído do documento e todas as suas interações com o Gemini sobre ele.</p>
               <button
-                onClick={() => downloadDocumentWithContext(selectedDocumentId)}
-                disabled={!selectedDocumentId}
+                onClick={handleDownload} 
+                disabled={!selectedDocumentId || isDownloading} 
                 className={styles.downloadButton}
               >
-                Baixar Documento (Texto {conversationHistory.length > 0 ? '+ Interações' : ''})
+                {isDownloading ? 'Preparando TXT...' : 'Baixar Texto e Interações'}
               </button>
             </div>
           )}
