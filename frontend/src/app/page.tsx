@@ -11,6 +11,7 @@ interface Document {
   filename: string;
   originalFilename?: string | null;
   extractedText?: string;
+   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   parsedJson?: { [key: string]: unknown } | null;
 }
 
