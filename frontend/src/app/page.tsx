@@ -11,7 +11,7 @@ interface Document {
   filename: string;
   originalFilename?: string | null;
   extractedText?: string;
-   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   parsedJson?: { [key: string]: unknown } | null;
 }
 
@@ -43,6 +43,8 @@ interface GeminiResponse {
 interface DownloadErrorResponse {
   message?: string;
 }
+
+const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000';
 
 const HomePage = () => {
   // --- Estados de Autenticação ---
@@ -89,7 +91,8 @@ const HomePage = () => {
     if (e) e.preventDefault();
     clearMessages();
     try {
-      const response = await axios.post<AuthResponse>('http://localhost:3000/auth/login', {
+      // Corrigido: Usando crases para o template literal
+      const response = await axios.post<AuthResponse>(`${BACKEND_BASE_URL}/auth/login`, {
         email,
         password,
       });
@@ -118,7 +121,8 @@ const HomePage = () => {
       return;
     }
     try {
-      const response = await axios.post<RegisterResponse>('http://localhost:3000/auth/register', {
+      // Corrigido: Usando crases para o template literal
+      const response = await axios.post<RegisterResponse>(`${BACKEND_BASE_URL}/auth/register`, {
         email,
         password,
       });
@@ -171,7 +175,8 @@ const HomePage = () => {
     setIsLoadingDocs(true);
     clearMessages();
     try {
-      const response = await axios.get<Document[]>('http://localhost:3000/documents', {
+      // Corrigido: Usando crases para o template literal
+      const response = await axios.get<Document[]>(`${BACKEND_BASE_URL}/documents`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setDocuments(response.data);
@@ -184,8 +189,8 @@ const HomePage = () => {
              setError('Sessão expirada. Faça login novamente.');
            } else {
              if (!uploadError) {
-                 const backendErrorMessage = (error.response?.data as { message?: string })?.message || error.message;
-                 setError(`Erro ao buscar documentos: ${backendErrorMessage}`);
+                  const backendErrorMessage = (error.response?.data as { message?: string })?.message || error.message;
+                  setError(`Erro ao buscar documentos: ${backendErrorMessage}`);
              }
            }
       } else {
@@ -202,10 +207,10 @@ const HomePage = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       setSelectedFile(event.target.files[0]);
-      setUploadError(null); 
+      setUploadError(null);
       setUploadSuccessMessage(null);
     } else {
-        setSelectedFile(null); 
+        setSelectedFile(null);
     }
   };
 
@@ -229,7 +234,8 @@ const HomePage = () => {
         return;
       }
 
-      const response = await axios.post<DocumentUploadResponse>('http://localhost:3000/documents/upload', formData, { 
+      // Corrigido: Usando crases para o template literal
+      const response = await axios.post<DocumentUploadResponse>(`${BACKEND_BASE_URL}/documents/upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`,
@@ -239,16 +245,14 @@ const HomePage = () => {
       if (response.status === 201) {
         setUploadSuccessMessage('Arquivo enviado e processado com sucesso!');
         setSelectedFile(null);
-        fetchDocuments(); 
+        fetchDocuments();
       } else {
-        
-        setUploadError(response.data?.message || 'Erro desconhecido ao enviar o arquivo.');
+        setError(response.data?.message || 'Erro desconhecido ao enviar o arquivo.');
       }
-    } catch (error: unknown) { 
+    } catch (error: unknown) {
        console.error("Erro durante o upload:", error);
        if (axios.isAxiosError<DocumentUploadResponse>(error)) {
-          
-           const backendErrorMessage = error.response?.data?.message || error.message;
+           const backendErrorMessage = (error.response?.data as { message?: string })?.message || error.message;
            setUploadError(`Erro no upload: ${backendErrorMessage}`);
        } else {
            setUploadError('Ocorreu um erro desconhecido durante o upload.');
@@ -280,35 +284,34 @@ const HomePage = () => {
         return;
       }
 
-     
+      // Esta URL já estava correta com crases
       const response = await axios.post<GeminiResponse>(
-        `http://localhost:3000/documents/llm/query/${selectedDocumentId}`, 
+        `${BACKEND_BASE_URL}/documents/llm/query/${selectedDocumentId}`,
         { question },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-     
-      const geminiAnswer = response.data.answer;
-      setAnswer(geminiAnswer); 
 
-    
+      const geminiAnswer = response.data.answer;
+      setAnswer(geminiAnswer);
+
       setConversationHistory([
         ...conversationHistory,
         { question: question, answer: geminiAnswer },
       ]);
-      setQuestion(''); 
+      setQuestion('');
       setSuccessMessage('Resposta do Gemini recebida.');
     } catch (error: unknown) {
        console.error("Erro ao perguntar ao Gemini:", error);
        if (axios.isAxiosError<GeminiResponse>(error)) {
            const backendErrorMessage = error.response?.data?.message || error.message;
            setError(`Erro ao perguntar ao Gemini: ${backendErrorMessage}`);
-           setAnswer(''); 
+           setAnswer('');
        } else {
            setError('Ocorreu um erro desconhecido ao perguntar ao Gemini.');
            console.error('Erro inesperado ao perguntar ao Gemini:', error);
-           setAnswer(''); 
+           setAnswer('');
        }
     } finally {
       setIsAskingQuestion(false);
@@ -331,7 +334,8 @@ const HomePage = () => {
         return;
       }
 
-      let url = `http://localhost:3000/documents/download/${selectedDocumentId}`;
+      // Esta URL já estava correta com crases
+      let url = `${BACKEND_BASE_URL}/documents/download/${selectedDocumentId}`;
 
       if (conversationHistory.length > 0) {
           const queries = encodeURIComponent(JSON.stringify(conversationHistory));
@@ -339,13 +343,12 @@ const HomePage = () => {
       }
 
       try {
- 
-          const response = await axios.get<string>(url, { 
+          const response = await axios.get<string>(url, {
               headers: { Authorization: `Bearer ${token}` },
-              responseType: 'text', 
+              responseType: 'text',
           });
 
-          const textContent = response.data; 
+          const textContent = response.data;
 
           const selectedDoc = documents.find(doc => doc.id === selectedDocumentId);
           const baseFilename = selectedDoc?.originalFilename?.replace(/\s/g, '_').replace(/[^\w.-]/g, '').split('.').slice(0, -1).join('.') || `document_${selectedDocumentId}`;
@@ -357,30 +360,27 @@ const HomePage = () => {
           const fileURL = urlCreator.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = fileURL;
-          link.download = filename; 
+          link.download = filename;
           document.body.appendChild(link);
-          link.click(); 
-          document.body.removeChild(link); 
+          link.click();
+          document.body.removeChild(link);
           window.URL.revokeObjectURL(fileURL);
 
           setSuccessMessage('Arquivo de texto baixado com sucesso!');
 
-      } catch (error: unknown) { 
+      } catch (error: unknown) {
           console.error("Erro no download do arquivo de texto:", error);
            if (axios.isAxiosError<DownloadErrorResponse | string>(error)) {
-    
                const backendErrorMessage = (error.response?.data as DownloadErrorResponse)?.message || error.message;
                setError(backendErrorMessage || 'Erro ao baixar o arquivo de texto.');
            } else {
-
                setError('Ocorreu um erro desconhecido ao baixar o arquivo de texto.');
                console.error('Erro inesperado durante o download:', error);
            }
       } finally {
-          setIsDownloading(false); 
+          setIsDownloading(false);
       }
   };
-
 
   useEffect(() => {
     // Verifica a autenticação inicial ao carregar a página
@@ -392,18 +392,18 @@ const HomePage = () => {
   }, []);
 
   useEffect(() => {
-
+    // Busca documentos quando o estado de autenticação muda para true
     if (isAuthenticated) {
       fetchDocuments();
     } else {
-
+      // Limpa a lista de documentos e o documento selecionado se não estiver autenticado
       setDocuments([]);
       setSelectedDocumentId(null);
       setConversationHistory([]);
       setAnswer('');
     }
   }, [isAuthenticated, fetchDocuments]);
-  
+
   // Exibe estado de carregamento inicial da autenticação
   if (isLoadingAuth) {
     return <div className={styles.loading}>Verificando autenticação...</div>;
@@ -519,7 +519,8 @@ const HomePage = () => {
             )}
             <button
               onClick={handleFileUpload}
-              disabled={isUploading || !selectedFile} 
+              disabled={isUploading || !selectedFile}
+              className={styles.uploadButton}
             >
               {isUploading ? 'Enviando...' : 'Enviar Arquivo'}
             </button>
@@ -537,7 +538,7 @@ const HomePage = () => {
                      value={selectedDocumentId === null ? "" : selectedDocumentId}
                      onChange={(e) => {
                          setSelectedDocumentId(e.target.value === "" ? null : e.target.value);
-                         setConversationHistory([]); 
+                         setConversationHistory([]);
                          setAnswer('');
                          clearMessages();
                      }}
@@ -546,13 +547,12 @@ const HomePage = () => {
                      <option value="">-- Selecione um documento --</option>
                      {documents.map((document) => (
                          <option key={document.id} value={document.id}>
-                             {document.originalFilename || document.filename || `Documento sem nome (${document.id})`} {/* Mostra nome original se disponível */}
+                             {document.originalFilename || document.filename || `Documento sem nome (${document.id})`}
                          </option>
                      ))}
                  </select>
              )}
           </div>
-
 
           {/* Área de Interação com o Documento (Pergunta ao Gemini e Histórico) */}
           {selectedDocumentId && (
@@ -570,7 +570,7 @@ const HomePage = () => {
                 />
                 <button
                   onClick={handleAskGemini}
-                  disabled={isAskingQuestion || !question.trim() || !selectedDocumentId} 
+                  disabled={isAskingQuestion || !question.trim() || !selectedDocumentId}
                   className={styles.askButton}
                 >
                   {isAskingQuestion ? 'Enviando pergunta...' : 'Perguntar ao Gemini'}
@@ -589,7 +589,7 @@ const HomePage = () => {
                {conversationHistory.length > 0 && (
                 <div className={styles.geminiHistoryArea}>
                     <h4 className={styles.geminiSubtitle}>Histórico de Interações:</h4>
-                    <div className={styles.historyList}> {/* Scrollbar para histórico longo */}
+                    <div className={styles.historyList}>
                         {conversationHistory.map((item, index) => (
                             <div key={index} className={styles.historyItem}>
                                 <p className={styles.historyQuestion}><strong>Você:</strong> {item.question}</p>
@@ -608,8 +608,8 @@ const HomePage = () => {
               <h3 className={styles.sectionTitle}>Baixar Texto e Interações</h3>
               <p className={styles.downloadDescription}>Baixa um arquivo de texto (.txt) contendo o conteúdo extraído do documento e todas as suas interações com o Gemini sobre ele.</p>
               <button
-                onClick={handleDownload} 
-                disabled={!selectedDocumentId || isDownloading} 
+                onClick={handleDownload}
+                disabled={!selectedDocumentId || isDownloading}
                 className={styles.downloadButton}
               >
                 {isDownloading ? 'Preparando TXT...' : 'Baixar Texto e Interações'}
